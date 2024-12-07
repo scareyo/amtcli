@@ -3,11 +3,7 @@ package cli
 import (
   "fmt"
   "github.com/spf13/cobra"
-)
-
-var (
-  username string
-  password string
+  "github.com/spf13/viper"
 )
 
 var (
@@ -28,8 +24,22 @@ var (
 )
 
 func init() {
+  var (
+    username string
+    password string
+  )
+
+  viper.SetEnvPrefix("amtcli")
+
+  // Username
   rootCmd.PersistentFlags().StringVarP(&username, "username", "u", "", "Intel AMT username")
+  viper.SetDefault("username", "admin")
+  viper.BindPFlag("username", rootCmd.PersistentFlags().Lookup("username"))
+
+  // Password
   rootCmd.PersistentFlags().StringVarP(&password, "password", "p", "", "Intel AMT password")
+  viper.BindEnv("password")
+  viper.BindPFlag("password", rootCmd.PersistentFlags().Lookup("password"))
 
   rootCmd.AddCommand(versionCmd)
 }
