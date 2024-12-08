@@ -12,6 +12,7 @@ type BootTarget string; const (
   BootTargetHdd   BootTarget = "HDD"
   BootTargetCd    BootTarget = "CD/DVD"
   BootTargetPxe   BootTarget = "PXE"
+  BootTargetBios  BootTarget = "BIOS"
 )
 
 type DeviceInfo struct {

@@ -14,7 +14,7 @@ var powerGroup = &cobra.Group {
 }
 
 var resetCmd = &cobra.Command {
-  Use:      "reset host ...",
+  Use:      "reset host...",
   Short:    "Reset the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
@@ -27,7 +27,7 @@ var resetCmd = &cobra.Command {
 }
 
 var restartCmd = &cobra.Command {
-  Use:      "restart host ...",
+  Use:      "restart host...",
   Short:    "Restart the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
@@ -40,7 +40,7 @@ var restartCmd = &cobra.Command {
 }
 
 var onCmd = &cobra.Command {
-  Use:      "on host ...",
+  Use:      "on host...",
   Short:    "Power on the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
@@ -53,7 +53,7 @@ var onCmd = &cobra.Command {
 }
 
 var offCmd = &cobra.Command {
-  Use:      "off host ...",
+  Use:      "off host...",
   Short:    "Power off the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {

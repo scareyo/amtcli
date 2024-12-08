@@ -1,7 +1,10 @@
 package cli
   
 import (
-  "fmt"
+  "log"
+
+  "github.com/scareyo/amtcli/pkg/amt"
+
   "github.com/spf13/cobra"
 )
 
@@ -11,14 +14,32 @@ var bootGroup = &cobra.Group {
 }
 
 var bootCmd = &cobra.Command {
-  Use:      "boot",
-  Short:    "Restart the device",
+  Use:      "boot target host...",
+  Short:    "Set the boot target (hdd, cd, pxe, bios)",
   GroupID:  "boot",
   Run: func(cmd *cobra.Command, args []string) {
-    fmt.Println("[**Unimplemented**] Changing boot device...")
+    log.Println("Changing boot device...")
+
+    var target amt.BootTarget
+    switch args[0] {
+      case "hdd":
+        target = amt.BootTargetHdd
+      case "cd":
+        target = amt.BootTargetCd
+      case "pxe":
+        target = amt.BootTargetPxe
+      case "bios":
+        target = amt.BootTargetBios
+    }
+
+    for _, host := range args[1:] {
+      client := client(host)
+      client.SetBootTarget(target)
+    }
   },
 }
 
 func init() {
   rootCmd.AddGroup(bootGroup)
+  rootCmd.AddCommand(bootCmd)
 }

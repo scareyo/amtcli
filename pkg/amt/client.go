@@ -3,14 +3,16 @@ package amt
 import (
   "log"
 
-  oamt "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
-  oamtclient "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
-  oamtpower "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
-  oamtservice "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
+  wsman "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
+  wsmanclient "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+  amtboot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
+  cimboot "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
+  cimpower "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
+  cimservice "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 )
 
 type Client struct {
-  msg oamt.Messages
+  msg wsman.Messages
 }
 
 type ClientParameters struct {
@@ -22,8 +24,8 @@ type ClientParameters struct {
 
 func Create(params ClientParameters) Client {
   return Client {
-    msg: oamt.NewMessages(
-      oamtclient.Parameters {
+    msg: wsman.NewMessages(
+      wsmanclient.Parameters {
         Target: params.Host,
         Username: params.Username,
         Password: params.Password,
@@ -36,12 +38,8 @@ func Create(params ClientParameters) Client {
 }
 
 func (c *Client) GetInfo() DeviceInfo {
-  response, err := c.msg.AMT.GeneralSettings.Get()
-  if err != nil {
-    log.Fatal(err)
-  }
-  settings := response.Body.GetResponse
-
+  settings := c.getGeneralSettings()
+  
   return DeviceInfo {
     State: c.GetPowerState(),
     AmtFqdn: settings.HostName + "." + settings.DomainName,
@@ -50,63 +48,89 @@ func (c *Client) GetInfo() DeviceInfo {
 }
 
 func (c *Client) GetPowerState() PowerState {
-  response, err := c.msg.CIM.ServiceAvailableToElement.Enumerate()
-  if err != nil {
-    log.Fatal(err)
-  }
+  state := c.getPowerState()
 
-  response, err = c.msg.CIM.ServiceAvailableToElement.Pull(response.Body.EnumerateResponse.EnumerationContext)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  state := response.Body.PullResponse.AssociatedPowerManagementService
-
-  switch state[0].PowerState {
-  case oamtservice.PowerStateOn:
+  switch state {
+  case cimservice.PowerStateOn:
     return PowerStateOn
-  case oamtservice.PowerStateOffSoft:
+  case cimservice.PowerStateOffSoft:
     return PowerStateOff
-  case oamtservice.PowerStateOffHard:
+  case cimservice.PowerStateOffHard:
     return PowerStateOff
   }
-
-  log.Println("Unhandled power state: " + string(state[0].PowerState))
 
   return PowerStateUnknown
 }
 
 func (c *Client) SetPowerState(state PowerState) bool {
-  var powerCode oamtpower.PowerState
+  var powerCode cimpower.PowerState
 
   switch state {
     case PowerStateOn:
-      powerCode = oamtpower.PowerOn
+      powerCode = cimpower.PowerOn
     case PowerStateOff:
-      powerCode = oamtpower.PowerOffSoft
+      powerCode = cimpower.PowerOffSoft
     case PowerStateReset:
-      powerCode = oamtpower.MasterBusReset
+      powerCode = cimpower.MasterBusReset
     case PowerStateRestart:
-      powerCode = oamtpower.PowerCycleOffSoft
+      powerCode = cimpower.PowerCycleOffSoft
   }
 
-  response, err := c.msg.CIM.PowerManagementService.RequestPowerStateChange(powerCode)
-  if err != nil {
-    log.Fatal(err)
+  response := c.setPowerState(powerCode)
+  if response != cimpower.ReturnValueCompletedWithNoError {
+    log.Fatal(response)
+    return false
   }
 
-  success := (response.Body.RequestPowerStateChangeResponse.ReturnValue == oamtpower.ReturnValueCompletedWithNoError)
-  if !success {
-    log.Fatal(response.Body.RequestPowerStateChangeResponse.ReturnValue)
-  }
-
-  return success
+  return true
 }
 
-func (c *Client) GetBootTarget() BootTarget {
-  return BootTargetHdd
-}
+func (c *Client) SetBootTarget(target BootTarget) bool {
+  var source cimboot.Source
 
-func (c *Client) SetBootTarget() bool {
+  switch target {
+    case BootTargetCd:
+      source = cimboot.CD
+    case BootTargetHdd:
+      source = cimboot.HardDrive
+    case BootTargetPxe:
+      source = cimboot.PXE
+    case BootTargetBios:
+      log.Fatal("BIOS boot target not yet supported")
+  }
+
+  settings := c.getBootSettings()
+  c.setBootConfigRole("Intel(r) AMT: Boot Configuration 0", 1)
+  c.setBootOrder(source)
+
+  newSettings := amtboot.BootSettingDataRequest{
+    BIOSLastStatus:         settings.BIOSLastStatus,
+    BIOSPause:              false,
+    BIOSSetup:              false,
+    BootMediaIndex:         0,
+    BootguardStatus:        settings.BootguardStatus,
+    ConfigurationDataReset: false,
+    ElementName:            settings.ElementName,
+    EnforceSecureBoot:      settings.EnforceSecureBoot,
+    FirmwareVerbosity:      0,
+    ForcedProgressEvents:   false,
+    InstanceID:             settings.InstanceID,
+    LockKeyboard:           false,
+    LockPowerButton:        false,
+    LockResetButton:        false,
+    LockSleepButton:        false,
+    OptionsCleared:         true,
+    OwningEntity:           settings.OwningEntity,
+    ReflashBIOS:            false,
+    UseIDER:                false,
+    UseSOL:                 false,
+    UseSafeMode:            false,
+    UserPasswordBypass:     false,
+    SecureErase:            false,
+    IDERBootDevice:         1,
+  }
+
+  c.setBootSettings(newSettings)
+
   return false
 }

@@ -10,7 +10,7 @@ import (
 
 var (
   infoCmd = &cobra.Command {
-    Use:      "info host ...",
+    Use:      "info host...",
     Short:    "Get device info",
     Run: func(cmd *cobra.Command, args []string) {
       for _, host := range args {
