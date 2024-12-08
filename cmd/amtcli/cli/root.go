@@ -2,6 +2,9 @@ package cli
 
 import (
   "fmt"
+
+  "github.com/scareyo/amtcli/pkg/amt"
+
   "github.com/spf13/cobra"
   "github.com/spf13/viper"
 )
@@ -48,3 +51,11 @@ func Execute() error {
   return rootCmd.Execute()
 }
 
+func client(host string) amt.Client {
+  return amt.Create(amt.ClientParameters{
+    Host: host,
+    UseTls: true,
+    Username: viper.GetString("username"),
+    Password: viper.GetString("password"),
+  })
+}

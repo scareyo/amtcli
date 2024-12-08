@@ -1,7 +1,10 @@
 package cli
-  
+
 import (
-  "fmt"
+  "log"
+
+  "github.com/scareyo/amtcli/pkg/amt"
+
   "github.com/spf13/cobra"
 )
 
@@ -15,7 +18,11 @@ var resetCmd = &cobra.Command {
   Short:    "Reset the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
-    fmt.Println("[**Unimplemented**] Resetting...")
+    log.Println("Resetting...")
+    for _, host := range args {
+      client := client(host)
+      client.SetPowerState(amt.PowerStateReset)
+    }
   },
 }
 
@@ -24,7 +31,11 @@ var restartCmd = &cobra.Command {
   Short:    "Restart the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
-    fmt.Println("[**Unimplemented**] Restarting...")
+    log.Println("Restarting...")
+    for _, host := range args {
+      client := client(host)
+      client.SetPowerState(amt.PowerStateRestart)
+    }
   },
 }
 
@@ -33,7 +44,11 @@ var onCmd = &cobra.Command {
   Short:    "Power on the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
-    fmt.Println("[**Unimplemented**] Powering on...")
+    log.Println("Powering on...")
+    for _, host := range args {
+      client := client(host)
+      client.SetPowerState(amt.PowerStateOn)
+    }
   },
 }
 
@@ -42,7 +57,11 @@ var offCmd = &cobra.Command {
   Short:    "Power off the device",
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
-    fmt.Println("[**Unimplemented**] Powering off...")
+    log.Println("Powering off...")
+    for _, host := range args {
+      client := client(host)
+      client.SetPowerState(amt.PowerStateOff)
+    }
   },
 }
 

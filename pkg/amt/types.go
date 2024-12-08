@@ -1,16 +1,21 @@
 package amt
 
-type PowerState int
+type PowerState string; const (
+  PowerStateOn        PowerState = "On"
+  PowerStateOff       PowerState = "Off" 
+  PowerStateReset     PowerState = "Reset" 
+  PowerStateRestart   PowerState = "Restart"
+  PowerStateUnknown   PowerState = "Unknown"
+)
 
-const (
-  On  PowerState = iota
-  Off
-  Reset
-  Restart
-  Custom
+type BootTarget string; const (
+  BootTargetHdd   BootTarget = "HDD"
+  BootTargetCd    BootTarget = "CD/DVD"
+  BootTargetPxe   BootTarget = "PXE"
 )
 
 type DeviceInfo struct {
-  AmtFqdn string
-  HostFqdn string
+  State       PowerState  `json:"state"`
+  AmtFqdn     string      `json:"amtFqdn"`
+  HostFqdn    string      `json:"hostFqdn"` 
 }

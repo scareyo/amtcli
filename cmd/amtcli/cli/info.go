@@ -1,10 +1,11 @@
 package cli
 
 import (
+  "encoding/json"
   "fmt"
+  "log"
+
   "github.com/spf13/cobra"
-  "github.com/spf13/viper"
-  "github.com/scareyo/amtcli/pkg/amt"
 )
 
 var (
@@ -13,15 +14,13 @@ var (
     Short:    "Get device info",
     Run: func(cmd *cobra.Command, args []string) {
       for _, host := range args {
-        client := amt.Create(amt.ClientParameters{
-          Host: host,
-          UseTls: true,
-          Username: viper.GetString("username"),
-          Password: viper.GetString("password"),
-        })
-        info := client.GetInfo()
-        fmt.Println(info.AmtFqdn)
-        fmt.Println(info.HostFqdn)
+        client := client(host)
+        info, err := json.MarshalIndent(client.GetInfo(), "", "  ")
+        if err != nil {
+          log.Fatal(err)
+        }
+
+        fmt.Println(string(info))
       }
     },
   }
