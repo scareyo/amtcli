@@ -69,7 +69,7 @@ func (c *Client) SetPowerState(state PowerState) bool {
     case PowerStateOn:
       powerCode = cimpower.PowerOn
     case PowerStateOff:
-      powerCode = cimpower.PowerOffSoft
+      powerCode = cimpower.PowerOffHard
     case PowerStateReset:
       powerCode = cimpower.MasterBusReset
     case PowerStateRestart:
