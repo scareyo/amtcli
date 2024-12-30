@@ -78,7 +78,7 @@ func (c *Client) SetPowerState(state PowerState) bool {
 
   response := c.setPowerState(powerCode)
   if response != cimpower.ReturnValueCompletedWithNoError {
-    log.Fatal(response)
+    log.Println(response)
     return false
   }
 

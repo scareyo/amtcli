@@ -13,7 +13,7 @@ import (
 func (c *Client) getGeneralSettings() amtgeneral.GeneralSettingsResponse {
   response, err := c.msg.AMT.GeneralSettings.Get()
   if err != nil {
-    log.Fatal(err)
+    log.Println(err)
   }
   return response.Body.GetResponse
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
   "log"
+  "sync"
 
   "github.com/scareyo/amtcli/pkg/amt"
 
@@ -19,10 +20,15 @@ var resetCmd = &cobra.Command {
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
     log.Println("Resetting...")
+
+    var wg sync.WaitGroup
+    wg.Add(len(args))
+
     for _, host := range args {
-      client := client(host)
-      client.SetPowerState(amt.PowerStateReset)
+      go setPowerState(host, amt.PowerStateReset, &wg)
     }
+
+    wg.Wait()
   },
 }
 
@@ -32,10 +38,15 @@ var restartCmd = &cobra.Command {
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
     log.Println("Restarting...")
+
+    var wg sync.WaitGroup
+    wg.Add(len(args))
+
     for _, host := range args {
-      client := client(host)
-      client.SetPowerState(amt.PowerStateRestart)
+      go setPowerState(host, amt.PowerStateRestart, &wg)
     }
+
+    wg.Wait()
   },
 }
 
@@ -45,10 +56,15 @@ var onCmd = &cobra.Command {
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
     log.Println("Powering on...")
+
+    var wg sync.WaitGroup
+    wg.Add(len(args))
+
     for _, host := range args {
-      client := client(host)
-      client.SetPowerState(amt.PowerStateOn)
+      go setPowerState(host, amt.PowerStateOn, &wg)
     }
+
+    wg.Wait()
   },
 }
 
@@ -58,11 +74,29 @@ var offCmd = &cobra.Command {
   GroupID:  "power",
   Run: func(cmd *cobra.Command, args []string) {
     log.Println("Powering off...")
+
+    var wg sync.WaitGroup
+    wg.Add(len(args))
+
     for _, host := range args {
-      client := client(host)
-      client.SetPowerState(amt.PowerStateOff)
+      go setPowerState(host, amt.PowerStateOff, &wg)
     }
+
+    wg.Wait()
   },
+}
+
+func setPowerState(host string, state amt.PowerState, wg *sync.WaitGroup) {
+  defer wg.Done()
+  
+  client := client(host)
+  success := client.SetPowerState(state)
+  
+  if !success {
+    log.Println("[" + host + "] Failure")
+  } else {
+    log.Println("[" + host + "] Success")
+  }
 }
 
 func init() {
